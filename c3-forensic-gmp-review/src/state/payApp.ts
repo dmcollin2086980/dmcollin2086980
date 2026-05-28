@@ -1,0 +1,46 @@
+import type { LineCategory, PayAppLineItem, PayApplication } from '../engine/types';
+
+export const defaultPayApp = (): PayApplication => ({
+  applicationNumber: 1,
+  periodTo: '',
+  lineItems: [],
+  reportedTotalCompletedAndStored: 0,
+  reportedRetainage: 0,
+  reportedTotalEarnedLessRetainage: 0,
+  reportedLessPreviousCertificates: 0,
+  reportedCurrentPaymentDue: 0,
+});
+
+export const emptyLineItem = (): PayAppLineItem => ({
+  code: '',
+  description: '',
+  scheduledValue: 0,
+  workCompletedPrevious: 0,
+  workCompletedThisPeriod: 0,
+  materialsPresentlyStored: 0,
+  category: 'cost_of_work',
+});
+
+export const LINE_CATEGORIES: ReadonlyArray<{ value: LineCategory; label: string }> = [
+  { value: 'cost_of_work', label: 'Cost of work' },
+  { value: 'general_conditions', label: 'General conditions' },
+  { value: 'fee', label: 'Fee' },
+  { value: 'contingency_owner', label: "Owner's contingency" },
+  { value: 'contingency_gc', label: "Contractor's contingency" },
+  { value: 'allowance', label: 'Allowance' },
+  { value: 'insurance', label: 'Insurance' },
+  { value: 'bond', label: 'Bond' },
+  { value: 'stored_materials', label: 'Stored materials' },
+  { value: 'other', label: 'Other' },
+];
+
+const CATEGORY_VALUES = new Set<string>(LINE_CATEGORIES.map((c) => c.value));
+
+export const parseFeeBasisText = (text: string): LineCategory[] =>
+  text
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0 && CATEGORY_VALUES.has(s)) as LineCategory[];
+
+export const feeBasisToText = (cats: LineCategory[] | undefined): string =>
+  (cats ?? []).join(', ');

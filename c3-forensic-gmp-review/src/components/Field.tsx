@@ -89,17 +89,34 @@ export const TextareaInput = ({
   value,
   onChange,
   placeholder,
+  rows,
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  rows?: number;
 }) => (
   <textarea
     value={value}
     onChange={(e) => onChange(e.target.value)}
     placeholder={placeholder}
-    rows={3}
-    className={baseInput + ' min-h-[5rem]'}
+    rows={rows ?? 3}
+    className={baseInput + ' min-h-[5rem] font-mono'}
+  />
+);
+
+export const DateInput = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) => (
+  <input
+    type="date"
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    className={baseInput}
   />
 );
 
