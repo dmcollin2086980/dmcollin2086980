@@ -16,6 +16,11 @@ export const defaultPayApp = (): PayApplication => ({
   reportedCurrentPaymentDue: 0,
 });
 
+// 9 base-36 chars are enough to disambiguate rows in a single form lifetime
+// without pulling in crypto.randomUUID (which is browser-only at runtime).
+export const makeUiKey = (): string =>
+  Math.random().toString(36).slice(2, 11);
+
 export const emptyLineItem = (): PayAppLineItem => ({
   code: '',
   description: '',
@@ -24,6 +29,7 @@ export const emptyLineItem = (): PayAppLineItem => ({
   workCompletedThisPeriod: 0,
   materialsPresentlyStored: 0,
   category: 'cost_of_work',
+  _uiKey: makeUiKey(),
 });
 
 export const LINE_CATEGORIES: ReadonlyArray<{ value: LineCategory; label: string }> = [

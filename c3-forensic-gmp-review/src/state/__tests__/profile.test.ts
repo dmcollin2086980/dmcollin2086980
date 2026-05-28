@@ -47,7 +47,7 @@ describe('JSON round-trip', () => {
     profile.projectName = 'Example Hospital';
     profile.gmpAmount = 12_500_000;
     profile.allowances = [
-      { code: 'ALLOW-01', description: 'Signage', amount: 25_000 },
+      { code: 'ALLOW-01', description: 'Signage', amount: 25_000, _uiKey: 'stable-key-1' },
     ];
     profile.retainageReductionAtPercent = 0.5;
     profile.retainageReleasedLineItems = ['BOND-01'];
@@ -55,6 +55,19 @@ describe('JSON round-trip', () => {
     profile.notes = 'Renovation of east wing.';
     const json = profileToJson(profile);
     expect(parseProfileJson(json)).toEqual(profile);
+  });
+
+  it('backfills a _uiKey on allowances that were exported without one', () => {
+    const profile = defaultProfile();
+    profile.allowances = [
+      { code: 'ALLOW-01', description: 'Signage', amount: 25_000 },
+    ];
+    // Stringify-then-strip the _uiKey to simulate a profile JSON exported
+    // before this field existed.
+    const json = profileToJson(profile);
+    const restored = parseProfileJson(json);
+    expect(restored.allowances[0]!._uiKey).toBeTypeOf('string');
+    expect(restored.allowances[0]!._uiKey!.length).toBeGreaterThan(0);
   });
 
   it('preserves the absence of optional fields', () => {

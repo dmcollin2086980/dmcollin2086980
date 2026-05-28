@@ -7,6 +7,7 @@ import {
   profileToJson,
   slugify,
 } from '../state/profile';
+import { makeUiKey } from '../state/payApp';
 import {
   CheckboxField,
   Field,
@@ -44,7 +45,10 @@ export const ProjectProfileForm = ({ profile, onChange }: Props) => {
   const addAllowance = () =>
     onChange({
       ...profile,
-      allowances: [...profile.allowances, { code: '', description: '', amount: 0 }],
+      allowances: [
+        ...profile.allowances,
+        { code: '', description: '', amount: 0, _uiKey: makeUiKey() },
+      ],
     });
   const removeAllowance = (index: number) =>
     onChange({
@@ -269,7 +273,7 @@ export const ProjectProfileForm = ({ profile, onChange }: Props) => {
         <div className="md:col-span-2 flex flex-col gap-2">
           {profile.allowances.map((a, i) => (
             <div
-              key={i}
+              key={a._uiKey ?? `fallback-${i}`}
               className="grid grid-cols-1 md:grid-cols-[1fr_2fr_1fr_auto] gap-2 items-center"
             >
               <TextInput

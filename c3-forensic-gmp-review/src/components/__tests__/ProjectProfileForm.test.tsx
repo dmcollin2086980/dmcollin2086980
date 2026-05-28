@@ -61,6 +61,33 @@ describe('ProjectProfileForm', () => {
     expect(latest!.allowances).toHaveLength(0);
   });
 
+  it('preserves per-row identity when a middle allowance is removed', async () => {
+    const user = userEvent.setup();
+    let latest: ProjectProfile | null = null;
+    render(<Harness onProfile={(p) => (latest = p)} />);
+
+    const add = screen.getByRole('button', { name: /add allowance/i });
+    await user.click(add);
+    await user.click(add);
+    await user.click(add);
+
+    const codeInputs = screen.getAllByPlaceholderText(/ALLOW-01/i);
+    await user.type(codeInputs[0]!, 'first');
+    await user.type(codeInputs[1]!, 'middle');
+    await user.type(codeInputs[2]!, 'last');
+
+    const middleKey = latest!.allowances[1]!._uiKey;
+    const lastKey = latest!.allowances[2]!._uiKey;
+
+    await user.click(screen.getByRole('button', { name: /remove allowance first/i }));
+
+    expect(latest!.allowances).toHaveLength(2);
+    expect(latest!.allowances[0]!.code).toBe('middle');
+    expect(latest!.allowances[0]!._uiKey).toBe(middleKey);
+    expect(latest!.allowances[1]!.code).toBe('last');
+    expect(latest!.allowances[1]!._uiKey).toBe(lastKey);
+  });
+
   it('imports a JSON file into the form state', async () => {
     const user = userEvent.setup();
     let latest: ProjectProfile | null = null;

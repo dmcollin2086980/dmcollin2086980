@@ -66,4 +66,31 @@ describe('PayAppEntry', () => {
     await user.selectOptions(select, 'fee');
     expect(latest!.lineItems[0]!.category).toBe('fee');
   });
+
+  it('preserves per-row identity when a middle row is removed', async () => {
+    const user = userEvent.setup();
+    let latest: PayApplication | null = null;
+    render(<Harness onApp={(p) => (latest = p)} />);
+
+    const addLine = screen.getByRole('button', { name: /^add line$/i });
+    await user.click(addLine);
+    await user.click(addLine);
+    await user.click(addLine);
+
+    // Tag each row's description to track identity after a removal.
+    await user.type(screen.getByLabelText(/description, line 1/i), 'alpha');
+    await user.type(screen.getByLabelText(/description, line 2/i), 'beta');
+    await user.type(screen.getByLabelText(/description, line 3/i), 'gamma');
+
+    const betaKey = latest!.lineItems[1]!._uiKey;
+    const gammaKey = latest!.lineItems[2]!._uiKey;
+
+    await user.click(screen.getByRole('button', { name: /remove line 1/i }));
+
+    expect(latest!.lineItems).toHaveLength(2);
+    expect(latest!.lineItems[0]!.description).toBe('beta');
+    expect(latest!.lineItems[0]!._uiKey).toBe(betaKey);
+    expect(latest!.lineItems[1]!.description).toBe('gamma');
+    expect(latest!.lineItems[1]!._uiKey).toBe(gammaKey);
+  });
 });

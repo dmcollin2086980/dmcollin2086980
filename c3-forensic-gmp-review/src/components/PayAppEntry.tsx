@@ -3,6 +3,7 @@ import {
   emptyLineItem,
   feeBasisToText,
   LINE_CATEGORIES,
+  makeUiKey,
   parseFeeBasisText,
 } from '../state/payApp';
 import { CsvImport } from './CsvImport';
@@ -33,7 +34,14 @@ export const PayAppEntry = ({ payApp, onChange }: Props) => {
   return (
     <div className="flex flex-col gap-4">
       <Section title="CSV / paste import">
-        <CsvImport onLines={(lineItems) => onChange({ ...payApp, lineItems })} />
+        <CsvImport
+          onLines={(lineItems) =>
+            onChange({
+              ...payApp,
+              lineItems: lineItems.map((l) => ({ ...l, _uiKey: makeUiKey() })),
+            })
+          }
+        />
       </Section>
 
       <Section title="G702 summary">
@@ -107,7 +115,10 @@ export const PayAppEntry = ({ payApp, onChange }: Props) => {
                 </tr>
               )}
               {payApp.lineItems.map((line, i) => (
-                <tr key={i} className="border-t border-slate-200 align-top">
+                <tr
+                  key={line._uiKey ?? `fallback-${i}`}
+                  className="border-t border-slate-200 align-top"
+                >
                   <td className="px-1 py-1">
                     <input
                       aria-label={`Code, line ${i + 1}`}

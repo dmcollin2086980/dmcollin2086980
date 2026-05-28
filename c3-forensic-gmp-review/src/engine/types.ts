@@ -42,6 +42,8 @@ export interface Allowance {
   code: string;
   description: string;
   amount: number;
+  /** Stable per-row identity for React reconciliation. Engine ignores. */
+  _uiKey?: string;
 }
 
 export interface ProjectProfile {
@@ -85,6 +87,8 @@ export interface PayAppLineItem {
   retainageWithheld?: number;
   feeBasisCategories?: LineCategory[];
   feeBilledThisPeriod?: number;
+  /** Stable per-row identity for React reconciliation. Engine ignores. */
+  _uiKey?: string;
 }
 
 export interface PayApplication {

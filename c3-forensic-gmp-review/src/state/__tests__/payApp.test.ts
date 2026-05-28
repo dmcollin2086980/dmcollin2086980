@@ -27,6 +27,14 @@ describe('emptyLineItem', () => {
     expect(line.scheduledValue).toBe(0);
     expect(line.workCompletedThisPeriod).toBe(0);
   });
+
+  it('assigns a non-empty _uiKey for React reconciliation', () => {
+    const a = emptyLineItem();
+    const b = emptyLineItem();
+    expect(typeof a._uiKey).toBe('string');
+    expect(a._uiKey!.length).toBeGreaterThan(0);
+    expect(a._uiKey).not.toBe(b._uiKey);
+  });
 });
 
 describe('fee basis text round-trip', () => {

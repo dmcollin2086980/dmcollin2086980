@@ -4,6 +4,7 @@ import type {
   FeeBaseDefinition,
   ProjectProfile,
 } from '../engine/types';
+import { makeUiKey } from './payApp';
 
 export const CONTRACT_TYPES_WITH_LABELS: ReadonlyArray<{
   value: ContractType;
@@ -105,7 +106,10 @@ export const parseProfileJson = (text: string): ProjectProfile => {
     allowances: require(
       'allowances',
       Array.isArray(raw.allowances) && raw.allowances.every(isAllowance),
-      raw.allowances as Allowance[],
+      (raw.allowances as Allowance[]).map((a) => ({
+        ...a,
+        _uiKey: a._uiKey ?? makeUiKey(),
+      })),
     ),
     insurancePassthroughAtCost: require(
       'insurancePassthroughAtCost',
