@@ -8,6 +8,7 @@ This directory holds the v1 build. See [`docs/v1-spec.md`](docs/v1-spec.md) for 
 
 **M1 — Engine core: complete.**
 **M2a — CSV / paste import: complete.** Pure-TS parser for the addendum's CSV contract; structured errors and warnings; output feeds directly into `runAudit`.
+**M2b — UI scaffold + Project Profile form: complete.** Vite + React 19 + Tailwind v4. `npm run dev` boots the app; the Profile form covers all GMP fields with JSON export / import.
 
 The deterministic rules engine implements the 8 forensic checks from spec Section 5, with the addendum's fee-logic division applied:
 
@@ -22,15 +23,17 @@ The deterministic rules engine implements the 8 forensic checks from spec Sectio
 | `STORED_MATERIALS_DOC`        | low      | documentation checklist (informational)     |
 | `ARITHMETIC_INTEGRITY`        | high     | G702 rollup integrity vs G703 line totals   |
 
-Pending: M2b/M2c input UI, M3 findings table + memo export, M4 paywall, M5 polish.
+Pending: M2c PayApp entry + CSV import UI, M3 findings table + memo export, M4 paywall, M5 polish.
 
 ## Develop
 
 ```bash
 cd c3-forensic-gmp-review
 npm install
+npm run dev        # http://localhost:5173 — Project profile form
 npm run typecheck
 npm test
+npm run build      # Vite production build into dist/
 ```
 
 ## Layout
@@ -52,9 +55,19 @@ src/
     __tests__/
       fixtures.ts           addendum sample CSV (and its TSV form)
       csv.test.ts
+  state/
+    profile.ts              defaultProfile, profileToJson, parseProfileJson, slugify
+    __tests__/profile.test.ts
+  components/
+    Field.tsx               small Tailwind-styled input/label primitives
+    ProjectProfileForm.tsx  the GMP profile form (JSON export + import)
+    __tests__/ProjectProfileForm.test.tsx
+  App.tsx                   app shell
+  main.tsx                  React mount
+  styles.css                @import "tailwindcss";
 ```
 
-The engine is framework-agnostic: pure TypeScript, no DOM, no network. The UI layers (M2b onwards) will consume it through `parsePayAppCsv(text)` and `runAudit(profile, payApp)`.
+The engine is framework-agnostic: pure TypeScript, no DOM, no network. The UI (M2b) consumes it through `parsePayAppCsv(text)` and `runAudit(profile, payApp)`.
 
 ## Liability guardrails
 
