@@ -164,6 +164,14 @@ describe('parsePayAppCsv', () => {
     expect(parsePayAppCsv('   \n\n  ').issues[0]!.code).toBe('EMPTY_INPUT');
   });
 
+  it('flags structural CSV parse errors from papaparse with PARSE_FAILURE', () => {
+    // Unclosed quote leaves papaparse with a quote-related error.
+    const malformed = [HEADER, 'COW-01,"unclosed,1,2,3,4,cost_of_work,,'].join('\n');
+    const result = parsePayAppCsv(malformed);
+    expect(result.success).toBe(false);
+    expect(result.issues.some((i) => i.code === 'PARSE_FAILURE')).toBe(true);
+  });
+
   it('accepts a header-only input as a successful empty parse', () => {
     const result = parsePayAppCsv(HEADER);
     expect(result.success).toBe(true);

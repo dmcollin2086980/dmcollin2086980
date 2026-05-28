@@ -1,4 +1,11 @@
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import {
   clearLicenseKey,
   isValidLicenseKey,
@@ -36,11 +43,12 @@ export const LicenseProvider = ({ children }: { children: ReactNode }) => {
     setIsUnlocked(false);
   }, []);
 
-  return (
-    <Context.Provider value={{ isUnlocked, activate, deactivate }}>
-      {children}
-    </Context.Provider>
+  const value = useMemo<LicenseState>(
+    () => ({ isUnlocked, activate, deactivate }),
+    [isUnlocked, activate, deactivate],
   );
+
+  return <Context.Provider value={value}>{children}</Context.Provider>;
 };
 
 export const useLicense = (): LicenseState => {

@@ -39,8 +39,14 @@ export const CheckboxField = ({ label, checked, onChange }: CheckboxFieldProps) 
   </label>
 );
 
-const baseInput =
+export const baseInput =
   'rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm ' +
+  'focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500';
+
+// Tighter variant for grid cells: same focus and color, smaller padding,
+// full-width fit. Used by table-style row editors.
+export const cellInput =
+  'w-full rounded border border-slate-300 px-1.5 py-1 text-sm shadow-sm ' +
   'focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500';
 
 interface TextInputProps {

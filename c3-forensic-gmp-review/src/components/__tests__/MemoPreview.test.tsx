@@ -1,5 +1,5 @@
 import { type ReactElement } from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoPreview } from '../MemoPreview';
@@ -145,7 +145,9 @@ describe('MemoPreview', () => {
     renderUnlocked(<MemoPreview profile={profile} payApp={payApp} result={result} />);
 
     await user.click(screen.getByRole('button', { name: /download \.pdf/i }));
-    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    // buildPdfMemo is lazy-loaded via dynamic import; the handler resolves
+    // asynchronously after the click.
+    await waitFor(() => expect(createObjectURL).toHaveBeenCalledTimes(1));
     const [blob] = createObjectURL.mock.calls[0]!;
     expect(blob).toBeInstanceOf(Blob);
     expect((blob as Blob).type).toBe('application/pdf');

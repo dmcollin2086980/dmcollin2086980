@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { AuditResult, PayApplication, ProjectProfile } from '../engine/types';
 import { buildMarkdownMemo } from '../memo/buildMarkdownMemo';
-import { buildPdfMemo } from '../memo/buildPdfMemo';
 import { useLicense } from '../state/LicenseContext';
 import { maskDollars } from '../state/license';
 import { slugify } from '../state/profile';
@@ -41,9 +40,12 @@ export const MemoPreview = ({ profile, payApp, result }: Props) => {
     a.href = url;
     a.download = `${slugify(profile.projectName)}-payapp-${payApp.applicationNumber}-memo.${extension}`;
     document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      a.click();
+    } finally {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   };
 
   const handleDownload = () => {
@@ -51,8 +53,11 @@ export const MemoPreview = ({ profile, payApp, result }: Props) => {
     downloadBlob(new Blob([memo], { type: 'text/markdown' }), 'md');
   };
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     if (!isUnlocked) return;
+    // jspdf + jspdf-autotable add ~400KB to the bundle, so we keep them out
+    // of the main chunk and pay the load cost only on first .pdf click.
+    const { buildPdfMemo } = await import('../memo/buildPdfMemo');
     downloadBlob(buildPdfMemo({ profile, payApp, result, preparedBy }), 'pdf');
   };
 

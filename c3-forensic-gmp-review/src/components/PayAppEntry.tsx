@@ -6,16 +6,12 @@ import {
   parseFeeBasisText,
 } from '../state/payApp';
 import { CsvImport } from './CsvImport';
-import { DateInput, Field, NumberInput, Section } from './Field';
+import { cellInput, DateInput, Field, NumberInput, Section } from './Field';
 
 interface Props {
   payApp: PayApplication;
   onChange: (next: PayApplication) => void;
 }
-
-const cellInput =
-  'w-full rounded border border-slate-300 px-1.5 py-1 text-sm shadow-sm ' +
-  'focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500';
 
 export const PayAppEntry = ({ payApp, onChange }: Props) => {
   const update = <K extends keyof PayApplication>(field: K, value: PayApplication[K]) =>

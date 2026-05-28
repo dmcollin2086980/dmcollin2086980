@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
-import type { Allowance, ContractType, ProjectProfile } from '../engine/types';
+import type { Allowance, ProjectProfile } from '../engine/types';
 import {
+  CONTRACT_TYPES_WITH_LABELS,
   parseProfileJson,
   ProfileParseError,
   profileToJson,
@@ -21,11 +22,7 @@ interface Props {
   onChange: (next: ProjectProfile) => void;
 }
 
-const CONTRACT_OPTIONS: ReadonlyArray<{ value: ContractType; label: string }> = [
-  { value: 'A102_A201', label: 'AIA A102 / A201' },
-  { value: 'A133_A201', label: 'AIA A133 / A201' },
-  { value: 'custom', label: 'Custom contract' },
-];
+const CONTRACT_OPTIONS = CONTRACT_TYPES_WITH_LABELS;
 
 export const ProjectProfileForm = ({ profile, onChange }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);

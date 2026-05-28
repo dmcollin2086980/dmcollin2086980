@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import type { LineCategory, PayAppLineItem } from '../engine/types';
+import { ALL_LINE_CATEGORIES, type LineCategory, type PayAppLineItem } from '../engine/types';
 
 const EXPECTED_HEADERS = [
   'code',
@@ -13,18 +13,7 @@ const EXPECTED_HEADERS = [
   'fee_basis_categories',
 ] as const;
 
-const VALID_CATEGORIES: readonly LineCategory[] = [
-  'cost_of_work',
-  'general_conditions',
-  'fee',
-  'contingency_owner',
-  'contingency_gc',
-  'allowance',
-  'insurance',
-  'bond',
-  'stored_materials',
-  'other',
-];
+const VALID_CATEGORIES = ALL_LINE_CATEGORIES;
 
 export type ImportIssueCode =
   | 'EMPTY_INPUT'
@@ -36,7 +25,8 @@ export type ImportIssueCode =
   | 'FEE_WITHOUT_BASIS'
   | 'UNKNOWN_FEE_BASIS'
   | 'NON_FEE_HAS_BASIS'
-  | 'OVERBILLING';
+  | 'OVERBILLING'
+  | 'PARSE_FAILURE';
 
 export interface ImportIssue {
   severity: 'error' | 'warning';
@@ -99,6 +89,20 @@ export const parsePayAppCsv = (input: string): ImportResult => {
     skipEmptyLines: false,
     delimiter,
   });
+  // Surface papaparse-level errors (unclosed quotes, ragged rows, etc.) so a
+  // malformed import doesn't silently produce wrong cell alignments. The
+  // parser still returns partial data, but we treat any structural error as
+  // a hard failure.
+  if (parsed.errors.length > 0) {
+    return failure(
+      parsed.errors.map((err) => ({
+        severity: 'error' as const,
+        code: 'PARSE_FAILURE' as const,
+        row: typeof err.row === 'number' ? err.row + 1 : undefined,
+        message: `CSV structural error: ${err.message}`,
+      })),
+    );
+  }
   const rows = parsed.data;
 
   let headerIndex = -1;

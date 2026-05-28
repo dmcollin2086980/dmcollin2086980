@@ -1,19 +1,13 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { Finding, PayApplication, ProjectProfile } from '../engine/types';
+import { formatUsd } from '../format';
 import {
   DISCLAIMER,
   SEVERITY_LABEL,
   stripEmDash,
   type BuildMemoOptions,
 } from './buildMarkdownMemo';
-
-const usdFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 2,
-});
-const formatUsd = (n: number) => usdFormatter.format(n);
 
 // 0.75" all sides on Letter (612 x 792 points at 72dpi).
 const PAGE_WIDTH = 612;
@@ -174,9 +168,12 @@ const buildFindingsTable = (
     styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
     headStyles: { fillColor: [30, 41, 59], textColor: 255 },
   });
-  // autoTable updates lastAutoTable on the doc instance.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const finalY = (doc as any).lastAutoTable?.finalY ?? cursor.y;
+  // jspdf-autotable mutates the doc with `lastAutoTable.finalY`. Its TS types
+  // augment jsPDF but the module's `default` export does not surface it on the
+  // instance type, so we read it through a narrowed cast.
+  const finalY =
+    (doc as jsPDF & { lastAutoTable?: { finalY?: number } }).lastAutoTable
+      ?.finalY ?? cursor.y;
   cursor.y = finalY + 8;
 };
 

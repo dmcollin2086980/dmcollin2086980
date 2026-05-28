@@ -1,87 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { buildMarkdownMemo } from '../buildMarkdownMemo';
-import type {
-  AuditResult,
-  Finding,
-  PayApplication,
-  ProjectProfile,
-} from '../../engine/types';
+import type { AuditResult, Finding } from '../../engine/types';
 import { runAudit } from '../../engine/runner';
-import { defaultProfile } from '../../state/profile';
-import { parsePayAppCsv } from '../../import/csv';
-import { SAMPLE_CSV } from '../../import/__tests__/fixtures';
+import {
+  buildAcceptanceScenario,
+  cleanMemoProfile as cleanProfile,
+  tiedPayAppFromSample as cleanPayApp,
+} from '../../__test_utils__/scenarios';
 
 const fixedNow = new Date('2026-05-28T00:00:00Z');
-
-const cleanProfile = (): ProjectProfile => {
-  const p = defaultProfile();
-  p.projectName = 'Example Hospital';
-  p.gmpAmount = 5_000_000;
-  p.allowances = [
-    { code: 'ALLOW-01', description: 'Signage allowance', amount: 25_000 },
-  ];
-  return p;
-};
-
-const cleanPayApp = (): PayApplication => {
-  const parsed = parsePayAppCsv(SAMPLE_CSV);
-  if (!parsed.success) throw new Error('sample CSV should parse');
-  const total = parsed.lineItems.reduce(
-    (acc, l) =>
-      acc +
-      l.workCompletedPrevious +
-      l.workCompletedThisPeriod +
-      l.materialsPresentlyStored,
-    0,
-  );
-  const retainage = +(0.05 * total).toFixed(2);
-  return {
-    applicationNumber: 7,
-    periodTo: '2026-05-31',
-    lineItems: parsed.lineItems,
-    reportedTotalCompletedAndStored: total,
-    reportedRetainage: retainage,
-    reportedTotalEarnedLessRetainage: +(total - retainage).toFixed(2),
-    reportedLessPreviousCertificates: 0,
-    reportedCurrentPaymentDue: +(total - retainage).toFixed(2),
-  };
-};
-
-const acceptancePayApp = (): PayApplication => {
-  const payApp = cleanPayApp();
-  const feeIdx = payApp.lineItems.findIndex((l) => l.code === 'FEE-01');
-  payApp.lineItems[feeIdx] = {
-    ...payApp.lineItems[feeIdx]!,
-    feeBasisCategories: ['cost_of_work', 'insurance'],
-  };
-  const allowIdx = payApp.lineItems.findIndex((l) => l.code === 'ALLOW-01');
-  payApp.lineItems[allowIdx] = {
-    ...payApp.lineItems[allowIdx]!,
-    workCompletedPrevious: 30_000,
-  };
-  payApp.lineItems.push({
-    code: 'CONT-OWN-01',
-    description: "Owner's contingency draw",
-    scheduledValue: 200_000,
-    workCompletedPrevious: 0,
-    workCompletedThisPeriod: 12_000,
-    materialsPresentlyStored: 0,
-    category: 'contingency_owner',
-  });
-  // Retie G702 and over-withhold retainage.
-  payApp.reportedTotalCompletedAndStored = 1_477_000;
-  payApp.reportedRetainage = 100_000;
-  payApp.reportedTotalEarnedLessRetainage = 1_377_000;
-  payApp.reportedLessPreviousCertificates = 0;
-  payApp.reportedCurrentPaymentDue = 1_377_000;
-  return payApp;
-};
-
-const acceptanceProfile = (): ProjectProfile => {
-  const profile = cleanProfile();
-  profile.gcCapAmount = 100_000;
-  return profile;
-};
 
 describe('buildMarkdownMemo header', () => {
   it('lists project, application, period, prepared-by, and prepared-on', () => {
@@ -127,10 +54,14 @@ describe('buildMarkdownMemo with no findings', () => {
 });
 
 describe('buildMarkdownMemo with the acceptance scenario', () => {
-  const profile = acceptanceProfile();
-  const payApp = acceptancePayApp();
-  const result = runAudit(profile, payApp);
-  const memo = buildMarkdownMemo({ profile, payApp, result, preparedBy: 'J. Smith', now: fixedNow });
+  const { profile, payApp, result } = buildAcceptanceScenario();
+  const memo = buildMarkdownMemo({
+    profile,
+    payApp,
+    result,
+    preparedBy: 'J. Smith',
+    now: fixedNow,
+  });
 
   it('emits the summary counts and total exposure', () => {
     expect(memo).toMatch(/2 high, 3 medium, 0 low/);
@@ -212,4 +143,3 @@ describe('buildMarkdownMemo escaping', () => {
     expect(memo).toContain('Title - with em dash');
   });
 });
-

@@ -1,8 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { LicenseBar } from '../LicenseBar';
 import { LicenseProvider } from '../../state/LicenseContext';
+
+// localStorage is cleared globally in src/test-setup.ts after each test.
 
 const renderWithProvider = () =>
   render(
@@ -10,10 +12,6 @@ const renderWithProvider = () =>
       <LicenseBar />
     </LicenseProvider>,
   );
-
-afterEach(() => {
-  window.localStorage.clear();
-});
 
 describe('LicenseBar', () => {
   it('renders the activate form when no key is stored', () => {

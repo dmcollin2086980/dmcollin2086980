@@ -10,6 +10,22 @@ export type LineCategory =
   | 'stored_materials'
   | 'other';
 
+// Single source of truth for the LineCategory value list. Import this in any
+// module that needs to validate or iterate categories (csv parser, profile
+// validator, payApp select options).
+export const ALL_LINE_CATEGORIES: readonly LineCategory[] = [
+  'cost_of_work',
+  'general_conditions',
+  'fee',
+  'contingency_owner',
+  'contingency_gc',
+  'allowance',
+  'insurance',
+  'bond',
+  'stored_materials',
+  'other',
+];
+
 export type ContractType = 'A102_A201' | 'A133_A201' | 'custom';
 
 export type Severity = 'high' | 'medium' | 'low';

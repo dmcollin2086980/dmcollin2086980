@@ -7,6 +7,7 @@ import type {
   Severity,
 } from '../engine/types';
 import { runAudit } from '../engine/runner';
+import { formatUsd } from '../format';
 import { useLicense } from '../state/LicenseContext';
 import { DisclaimerBlock } from './DisclaimerBlock';
 import { LicenseBar } from './LicenseBar';
@@ -22,14 +23,6 @@ const severityClasses: Record<Severity, string> = {
   medium: 'bg-amber-100 text-amber-800',
   low: 'bg-slate-100 text-slate-700',
 };
-
-const usdFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 2,
-});
-
-const formatUsd = (n: number) => usdFormatter.format(n);
 
 const DollarValue = ({ value }: { value: number }) => {
   const { isUnlocked } = useLicense();
@@ -120,23 +113,33 @@ const FindingCard = ({ finding }: { finding: Finding }) => (
 
 export const FindingsView = ({ profile, payApp }: Props) => {
   const result = useMemo(() => runAudit(profile, payApp), [profile, payApp]);
-
-  if (payApp.lineItems.length === 0) {
-    return (
-      <div className="flex flex-col gap-4">
-        <DisclaimerBlock />
-        <LicenseBar />
-        <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
-          Add line items in the Pay application tab before running the audit.
-        </div>
-      </div>
-    );
-  }
+  const isEmpty = payApp.lineItems.length === 0;
 
   return (
     <div className="flex flex-col gap-4">
       <DisclaimerBlock />
       <LicenseBar />
+      {isEmpty && (
+        <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
+          Add line items in the Pay application tab before running the audit.
+        </div>
+      )}
+      {!isEmpty && (
+        <FindingsContent profile={profile} payApp={payApp} result={result} />
+      )}
+    </div>
+  );
+};
+
+interface FindingsContentProps {
+  profile: ProjectProfile;
+  payApp: PayApplication;
+  result: AuditResult;
+}
+
+const FindingsContent = ({ profile, payApp, result }: FindingsContentProps) => {
+  return (
+    <>
       <SummaryHeader result={result} />
 
       {result.findings.length === 0 && (
@@ -160,6 +163,6 @@ export const FindingsView = ({ profile, payApp }: Props) => {
       </div>
 
       <MemoPreview profile={profile} payApp={payApp} result={result} />
-    </div>
+    </>
   );
 };

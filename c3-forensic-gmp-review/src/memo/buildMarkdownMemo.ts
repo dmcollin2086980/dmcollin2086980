@@ -5,6 +5,7 @@ import type {
   ProjectProfile,
   Severity,
 } from '../engine/types';
+import { formatUsd } from '../format';
 
 export interface BuildMemoOptions {
   profile: ProjectProfile;
@@ -13,14 +14,6 @@ export interface BuildMemoOptions {
   preparedBy?: string;
   now?: Date;
 }
-
-const usdFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 2,
-});
-
-const formatUsd = (n: number): string => usdFormatter.format(n);
 
 const SEVERITY_LABEL: Record<Severity, string> = {
   high: 'HIGH',

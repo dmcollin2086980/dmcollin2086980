@@ -2,24 +2,21 @@ import type {
   Allowance,
   ContractType,
   FeeBaseDefinition,
-  LineCategory,
   ProjectProfile,
 } from '../engine/types';
 
-const CONTRACT_TYPES: readonly ContractType[] = ['A102_A201', 'A133_A201', 'custom'];
-
-const VALID_CATEGORIES: readonly LineCategory[] = [
-  'cost_of_work',
-  'general_conditions',
-  'fee',
-  'contingency_owner',
-  'contingency_gc',
-  'allowance',
-  'insurance',
-  'bond',
-  'stored_materials',
-  'other',
+export const CONTRACT_TYPES_WITH_LABELS: ReadonlyArray<{
+  value: ContractType;
+  label: string;
+}> = [
+  { value: 'A102_A201', label: 'AIA A102 / A201' },
+  { value: 'A133_A201', label: 'AIA A133 / A201' },
+  { value: 'custom', label: 'Custom contract' },
 ];
+
+const CONTRACT_TYPES: readonly ContractType[] = CONTRACT_TYPES_WITH_LABELS.map(
+  (c) => c.value,
+);
 
 export const defaultProfile = (): ProjectProfile => ({
   projectName: '',
@@ -179,4 +176,3 @@ export const slugify = (name: string): string =>
 
 // Kept exported for future UI code that needs the canonical list (Profile form,
 // PayApp form, etc.).
-export { VALID_CATEGORIES };

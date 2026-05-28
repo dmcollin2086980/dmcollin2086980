@@ -1,4 +1,9 @@
-import type { LineCategory, PayAppLineItem, PayApplication } from '../engine/types';
+import {
+  ALL_LINE_CATEGORIES,
+  type LineCategory,
+  type PayAppLineItem,
+  type PayApplication,
+} from '../engine/types';
 
 export const defaultPayApp = (): PayApplication => ({
   applicationNumber: 1,
@@ -34,7 +39,7 @@ export const LINE_CATEGORIES: ReadonlyArray<{ value: LineCategory; label: string
   { value: 'other', label: 'Other' },
 ];
 
-const CATEGORY_VALUES = new Set<string>(LINE_CATEGORIES.map((c) => c.value));
+const CATEGORY_VALUES = new Set<string>(ALL_LINE_CATEGORIES);
 
 export const parseFeeBasisText = (text: string): LineCategory[] =>
   text
