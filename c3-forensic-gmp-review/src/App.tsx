@@ -1,14 +1,16 @@
 import { useState } from 'react';
+import { FindingsView } from './components/FindingsView';
 import { PayAppEntry } from './components/PayAppEntry';
 import { ProjectProfileForm } from './components/ProjectProfileForm';
 import { defaultPayApp } from './state/payApp';
 import { defaultProfile } from './state/profile';
 
-type Section = 'profile' | 'payapp';
+type Section = 'profile' | 'payapp' | 'findings';
 
 const TABS: ReadonlyArray<{ value: Section; label: string }> = [
   { value: 'profile', label: 'Project profile' },
   { value: 'payapp', label: 'Pay application' },
+  { value: 'findings', label: 'Findings' },
 ];
 
 export const App = () => {
@@ -50,10 +52,14 @@ export const App = () => {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">
-        {section === 'profile' ? (
+        {section === 'profile' && (
           <ProjectProfileForm profile={profile} onChange={setProfile} />
-        ) : (
+        )}
+        {section === 'payapp' && (
           <PayAppEntry payApp={payApp} onChange={setPayApp} />
+        )}
+        {section === 'findings' && (
+          <FindingsView profile={profile} payApp={payApp} />
         )}
       </main>
     </div>

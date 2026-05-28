@@ -10,6 +10,7 @@ This directory holds the v1 build. See [`docs/v1-spec.md`](docs/v1-spec.md) for 
 **M2a — CSV / paste import: complete.** Pure-TS parser for the addendum's CSV contract; structured errors and warnings; output feeds directly into `runAudit`.
 **M2b — UI scaffold + Project Profile form: complete.** Vite + React 19 + Tailwind v4. `npm run dev` boots the app; the Profile form covers all GMP fields with JSON export / import.
 **M2c — Pay Application entry + CSV import UI: complete.** Tabbed nav between Profile and Pay App. The Pay App page has CSV/paste import (with preview + structured error reporting), a G702 summary form, and a G703 line grid with add/remove rows.
+**M3a — Findings view: complete.** Third tab runs `runAudit` against the live profile + payApp and renders the severity-ranked findings as cards with formatted USD exposure, contract basis, affected lines, explanation, and recommended action.
 
 The deterministic rules engine implements the 8 forensic checks from spec Section 5, with the addendum's fee-logic division applied:
 
@@ -24,7 +25,7 @@ The deterministic rules engine implements the 8 forensic checks from spec Sectio
 | `STORED_MATERIALS_DOC`        | low      | documentation checklist (informational)     |
 | `ARITHMETIC_INTEGRITY`        | high     | G702 rollup integrity vs G703 line totals   |
 
-Pending: M3 findings table + memo export, M4 paywall, M5 polish.
+Pending: M3b exposure memo (Markdown + PDF), M4 paywall, M5 polish.
 
 ## Develop
 
@@ -65,8 +66,9 @@ src/
     ProjectProfileForm.tsx  the GMP profile form (JSON export + import)
     PayAppEntry.tsx         the pay app page (CSV import + G702 form + G703 grid)
     CsvImport.tsx           wraps parsePayAppCsv with file upload + paste + preview
-    __tests__/              ProjectProfileForm, PayAppEntry, CsvImport
-  App.tsx                   app shell with Profile / Pay app tab nav
+    FindingsView.tsx        runs runAudit (useMemo) and renders the findings cards
+    __tests__/              ProjectProfileForm, PayAppEntry, CsvImport, FindingsView
+  App.tsx                   app shell with Profile / Pay app / Findings tabs
   main.tsx                  React mount
   styles.css                @import "tailwindcss";
 ```
