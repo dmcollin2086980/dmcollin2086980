@@ -1,13 +1,28 @@
-import { useState } from 'react';
-import { render, screen } from '@testing-library/react';
+import { useState, type ReactElement } from 'react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { FindingsView } from '../FindingsView';
+import { LicenseProvider } from '../../state/LicenseContext';
 import type { PayAppLineItem, PayApplication, ProjectProfile } from '../../engine/types';
 import { defaultPayApp } from '../../state/payApp';
 import { defaultProfile } from '../../state/profile';
 import { parsePayAppCsv } from '../../import/csv';
 import { SAMPLE_CSV } from '../../import/__tests__/fixtures';
+
+const seedUnlocked = () => {
+  window.localStorage.setItem('c3-license-key', 'C3-DEMO-V100');
+};
+
+const renderUnlocked = (ui: ReactElement) => {
+  seedUnlocked();
+  return render(<LicenseProvider>{ui}</LicenseProvider>);
+};
+
+const renderLocked = (ui: ReactElement) => {
+  window.localStorage.removeItem('c3-license-key');
+  return render(<LicenseProvider>{ui}</LicenseProvider>);
+};
 
 const cleanProfile = (): ProjectProfile => {
   const p = defaultProfile();
@@ -41,13 +56,13 @@ const tiedPayApp = (): PayApplication => {
 
 describe('FindingsView', () => {
   it('shows an "add line items" callout when the pay app is empty', () => {
-    render(<FindingsView profile={cleanProfile()} payApp={defaultPayApp()} />);
+    renderUnlocked(<FindingsView profile={cleanProfile()} payApp={defaultPayApp()} />);
     expect(screen.getByText(/add line items/i)).toBeInTheDocument();
     expect(screen.queryByRole('article')).not.toBeInTheDocument();
   });
 
   it('renders the clean-state callout when the sample CSV ties cleanly', () => {
-    render(<FindingsView profile={cleanProfile()} payApp={tiedPayApp()} />);
+    renderUnlocked(<FindingsView profile={cleanProfile()} payApp={tiedPayApp()} />);
     expect(screen.getByText(/cleared every rule/i)).toBeInTheDocument();
     expect(screen.queryByRole('article')).not.toBeInTheDocument();
   });
@@ -96,7 +111,7 @@ describe('FindingsView', () => {
     payApp.reportedLessPreviousCertificates = 0;
     payApp.reportedCurrentPaymentDue = 1_377_000;
 
-    render(<FindingsView profile={profile} payApp={payApp} />);
+    renderUnlocked(<FindingsView profile={profile} payApp={payApp} />);
 
     // Rule titles: each appears in both the card h3 and the memo table cell.
     expect(screen.getAllByText(/retainage over-withheld/i).length).toBeGreaterThan(0);
@@ -154,7 +169,7 @@ describe('FindingsView', () => {
       );
     };
     const user = userEvent.setup();
-    render(<Harness />);
+    renderUnlocked(<Harness />);
 
     expect(
       screen.getAllByText(/contractor fee applied to general conditions/i).length,
@@ -165,5 +180,41 @@ describe('FindingsView', () => {
     expect(
       screen.queryAllByText(/contractor fee applied to general conditions/i),
     ).toHaveLength(0);
+  });
+
+  it('masks dollar values when locked', () => {
+    const profile = cleanProfile();
+    profile.gcCapAmount = 100_000;
+    const payApp = tiedPayApp();
+    payApp.lineItems.push({
+      code: 'CONT-OWN-01',
+      description: '',
+      scheduledValue: 200_000,
+      workCompletedPrevious: 0,
+      workCompletedThisPeriod: 12_000,
+      materialsPresentlyStored: 0,
+      category: 'contingency_owner',
+    });
+    payApp.reportedTotalCompletedAndStored = 1_447_000;
+    payApp.reportedRetainage = 100_000;
+    payApp.reportedTotalEarnedLessRetainage = 1_347_000;
+    payApp.reportedCurrentPaymentDue = 1_347_000;
+
+    renderLocked(<FindingsView profile={profile} payApp={payApp} />);
+
+    // Severity badges still readable in card and memo
+    expect(
+      screen.getAllByText(/cumulative general conditions billings exceed/i).length,
+    ).toBeGreaterThan(0);
+
+    // Find the card and check that no real dollar amount is rendered.
+    const card = screen.getByRole('article', { name: /Finding GC_CAP_BREACH/ });
+    expect(within(card).queryByText(/\$20,000/)).not.toBeInTheDocument();
+    expect(within(card).getAllByText(/\$•••/).length).toBeGreaterThan(0);
+  });
+
+  it('shows the LicenseBar with the activate form when locked', () => {
+    renderLocked(<FindingsView profile={cleanProfile()} payApp={defaultPayApp()} />);
+    expect(screen.getByLabelText('License key')).toBeInTheDocument();
   });
 });

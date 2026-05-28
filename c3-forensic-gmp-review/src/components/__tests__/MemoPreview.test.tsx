@@ -1,12 +1,24 @@
+import { type ReactElement } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoPreview } from '../MemoPreview';
+import { LicenseProvider } from '../../state/LicenseContext';
 import { defaultProfile } from '../../state/profile';
 import { runAudit } from '../../engine/runner';
 import { parsePayAppCsv } from '../../import/csv';
 import { SAMPLE_CSV } from '../../import/__tests__/fixtures';
 import type { PayApplication, ProjectProfile } from '../../engine/types';
+
+const renderUnlocked = (ui: ReactElement) => {
+  window.localStorage.setItem('c3-license-key', 'C3-DEMO-V100');
+  return render(<LicenseProvider>{ui}</LicenseProvider>);
+};
+
+const renderLocked = (ui: ReactElement) => {
+  window.localStorage.removeItem('c3-license-key');
+  return render(<LicenseProvider>{ui}</LicenseProvider>);
+};
 
 const buildScenario = () => {
   const profile: ProjectProfile = {
@@ -59,7 +71,7 @@ afterEach(() => {
 describe('MemoPreview', () => {
   it('renders the memo containing the project name', () => {
     const { profile, payApp, result } = buildScenario();
-    render(<MemoPreview profile={profile} payApp={payApp} result={result} />);
+    renderUnlocked(<MemoPreview profile={profile} payApp={payApp} result={result} />);
     const preview = screen.getByLabelText('Memo preview');
     expect(preview).toHaveTextContent('Example Hospital');
     expect(preview).toHaveTextContent('Pay Application:');
@@ -68,7 +80,7 @@ describe('MemoPreview', () => {
   it('updates the memo when Prepared by changes', async () => {
     const user = userEvent.setup();
     const { profile, payApp, result } = buildScenario();
-    render(<MemoPreview profile={profile} payApp={payApp} result={result} />);
+    renderUnlocked(<MemoPreview profile={profile} payApp={payApp} result={result} />);
 
     const preview = screen.getByLabelText('Memo preview');
     expect(preview).toHaveTextContent('(not specified)');
@@ -83,7 +95,7 @@ describe('MemoPreview', () => {
     installClipboard(writeText);
     const user = userEvent.setup();
     const { profile, payApp, result } = buildScenario();
-    render(<MemoPreview profile={profile} payApp={payApp} result={result} />);
+    renderUnlocked(<MemoPreview profile={profile} payApp={payApp} result={result} />);
 
     await user.click(screen.getByRole('button', { name: /copy memo/i }));
     expect(writeText).toHaveBeenCalledTimes(1);
@@ -95,7 +107,7 @@ describe('MemoPreview', () => {
     installClipboard(writeText);
     const user = userEvent.setup();
     const { profile, payApp, result } = buildScenario();
-    render(<MemoPreview profile={profile} payApp={payApp} result={result} />);
+    renderUnlocked(<MemoPreview profile={profile} payApp={payApp} result={result} />);
 
     await user.click(screen.getByRole('button', { name: /copy memo/i }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not copy/i);
@@ -107,12 +119,45 @@ describe('MemoPreview', () => {
     vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL });
     const user = userEvent.setup();
     const { profile, payApp, result } = buildScenario();
-    render(<MemoPreview profile={profile} payApp={payApp} result={result} />);
+    renderUnlocked(<MemoPreview profile={profile} payApp={payApp} result={result} />);
 
     await user.click(screen.getByRole('button', { name: /download \.md/i }));
     expect(createObjectURL).toHaveBeenCalledTimes(1);
     const [blob] = createObjectURL.mock.calls[0]!;
     expect(blob).toBeInstanceOf(Blob);
     expect((blob as Blob).type).toBe('text/markdown');
+  });
+
+  it('disables Copy and Download when locked', () => {
+    const { profile, payApp, result } = buildScenario();
+    renderLocked(<MemoPreview profile={profile} payApp={payApp} result={result} />);
+    expect(screen.getByRole('button', { name: /copy memo/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /download \.md/i })).toBeDisabled();
+  });
+
+  it('masks dollar values in the preview when locked', () => {
+    const profile: ProjectProfile = {
+      ...defaultProfile(),
+      projectName: 'Example Hospital',
+      gmpAmount: 5_000_000,
+      gcCapAmount: 100_000,
+    };
+    const parsed = parsePayAppCsv(SAMPLE_CSV);
+    const payApp: PayApplication = {
+      applicationNumber: 7,
+      periodTo: '2026-05-31',
+      lineItems: parsed.lineItems,
+      reportedTotalCompletedAndStored: 1_435_000,
+      reportedRetainage: 100_000,
+      reportedTotalEarnedLessRetainage: 1_335_000,
+      reportedLessPreviousCertificates: 0,
+      reportedCurrentPaymentDue: 1_335_000,
+    };
+    const result = runAudit(profile, payApp);
+
+    renderLocked(<MemoPreview profile={profile} payApp={payApp} result={result} />);
+    const preview = screen.getByLabelText('Memo preview');
+    expect(preview.textContent).toContain('$•••');
+    expect(preview.textContent).not.toMatch(/\$[0-9]/);
   });
 });

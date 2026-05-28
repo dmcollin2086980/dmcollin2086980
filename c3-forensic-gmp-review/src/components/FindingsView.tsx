@@ -7,6 +7,8 @@ import type {
   Severity,
 } from '../engine/types';
 import { runAudit } from '../engine/runner';
+import { useLicense } from '../state/LicenseContext';
+import { LicenseBar } from './LicenseBar';
 import { MemoPreview } from './MemoPreview';
 
 interface Props {
@@ -28,6 +30,11 @@ const usdFormatter = new Intl.NumberFormat('en-US', {
 
 const formatUsd = (n: number) => usdFormatter.format(n);
 
+const DollarValue = ({ value }: { value: number }) => {
+  const { isUnlocked } = useLicense();
+  return <>{isUnlocked ? formatUsd(value) : '$•••'}</>;
+};
+
 const SummaryHeader = ({ result }: { result: AuditResult }) => (
   <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
     <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
@@ -36,7 +43,7 @@ const SummaryHeader = ({ result }: { result: AuditResult }) => (
           Estimated exposure
         </div>
         <div className="text-2xl font-semibold text-slate-900">
-          {formatUsd(result.totalExposure)}
+          <DollarValue value={result.totalExposure} />
         </div>
         <div className="text-xs text-slate-500">High + medium findings only.</div>
       </div>
@@ -76,7 +83,7 @@ const FindingCard = ({ finding }: { finding: Finding }) => (
     </header>
 
     <div className="mt-2 text-xl font-semibold text-slate-900">
-      {formatUsd(finding.dollarExposure)}
+      <DollarValue value={finding.dollarExposure} />
     </div>
 
     <dl className="mt-3 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
@@ -115,14 +122,18 @@ export const FindingsView = ({ profile, payApp }: Props) => {
 
   if (payApp.lineItems.length === 0) {
     return (
-      <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
-        Add line items in the Pay application tab before running the audit.
+      <div className="flex flex-col gap-4">
+        <LicenseBar />
+        <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
+          Add line items in the Pay application tab before running the audit.
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-4">
+      <LicenseBar />
       <SummaryHeader result={result} />
 
       {result.findings.length === 0 && (

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FindingsView } from './components/FindingsView';
 import { PayAppEntry } from './components/PayAppEntry';
 import { ProjectProfileForm } from './components/ProjectProfileForm';
+import { LicenseProvider } from './state/LicenseContext';
 import { defaultPayApp } from './state/payApp';
 import { defaultProfile } from './state/profile';
 
@@ -18,6 +19,37 @@ export const App = () => {
   const [profile, setProfile] = useState(defaultProfile);
   const [payApp, setPayApp] = useState(defaultPayApp);
 
+  return (
+    <LicenseProvider>
+      <AppShell
+        section={section}
+        setSection={setSection}
+        profile={profile}
+        setProfile={setProfile}
+        payApp={payApp}
+        setPayApp={setPayApp}
+      />
+    </LicenseProvider>
+  );
+};
+
+interface AppShellProps {
+  section: Section;
+  setSection: (s: Section) => void;
+  profile: ReturnType<typeof defaultProfile>;
+  setProfile: (p: ReturnType<typeof defaultProfile>) => void;
+  payApp: ReturnType<typeof defaultPayApp>;
+  setPayApp: (p: ReturnType<typeof defaultPayApp>) => void;
+}
+
+const AppShell = ({
+  section,
+  setSection,
+  profile,
+  setProfile,
+  payApp,
+  setPayApp,
+}: AppShellProps) => {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">

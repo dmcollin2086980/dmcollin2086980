@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import type { AuditResult, PayApplication, ProjectProfile } from '../engine/types';
 import { buildMarkdownMemo } from '../memo/buildMarkdownMemo';
+import { useLicense } from '../state/LicenseContext';
+import { maskDollars } from '../state/license';
 import { slugify } from '../state/profile';
 import { Field, TextInput } from './Field';
 
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export const MemoPreview = ({ profile, payApp, result }: Props) => {
+  const { isUnlocked } = useLicense();
   const [preparedBy, setPreparedBy] = useState('');
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle');
 
@@ -18,8 +21,10 @@ export const MemoPreview = ({ profile, payApp, result }: Props) => {
     () => buildMarkdownMemo({ profile, payApp, result, preparedBy }),
     [profile, payApp, result, preparedBy],
   );
+  const displayedMemo = isUnlocked ? memo : maskDollars(memo);
 
   const handleCopy = async () => {
+    if (!isUnlocked) return;
     try {
       await navigator.clipboard.writeText(memo);
       setCopyState('copied');
@@ -30,6 +35,7 @@ export const MemoPreview = ({ profile, payApp, result }: Props) => {
   };
 
   const handleDownload = () => {
+    if (!isUnlocked) return;
     const blob = new Blob([memo], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -40,6 +46,8 @@ export const MemoPreview = ({ profile, payApp, result }: Props) => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
+  const lockedTitle = isUnlocked ? undefined : 'Activate a license to unlock memo export.';
 
   return (
     <section
@@ -52,14 +60,18 @@ export const MemoPreview = ({ profile, payApp, result }: Props) => {
           <button
             type="button"
             onClick={handleCopy}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+            disabled={!isUnlocked}
+            title={lockedTitle}
+            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {copyState === 'copied' ? 'Copied' : 'Copy memo'}
           </button>
           <button
             type="button"
             onClick={handleDownload}
-            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+            disabled={!isUnlocked}
+            title={lockedTitle}
+            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
             Download .md
           </button>
@@ -86,7 +98,7 @@ export const MemoPreview = ({ profile, payApp, result }: Props) => {
         aria-label="Memo preview"
         className="max-h-[28rem] overflow-auto whitespace-pre rounded border border-slate-200 bg-slate-50 p-3 font-mono text-xs text-slate-800"
       >
-        {memo}
+        {displayedMemo}
       </pre>
     </section>
   );
