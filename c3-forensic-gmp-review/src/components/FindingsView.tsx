@@ -8,6 +8,7 @@ import type {
 } from '../engine/types';
 import { runAudit } from '../engine/runner';
 import { useLicense } from '../state/LicenseContext';
+import { DisclaimerBlock } from './DisclaimerBlock';
 import { LicenseBar } from './LicenseBar';
 import { MemoPreview } from './MemoPreview';
 
@@ -123,6 +124,7 @@ export const FindingsView = ({ profile, payApp }: Props) => {
   if (payApp.lineItems.length === 0) {
     return (
       <div className="flex flex-col gap-4">
+        <DisclaimerBlock />
         <LicenseBar />
         <div className="rounded-md border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
           Add line items in the Pay application tab before running the audit.
@@ -133,6 +135,7 @@ export const FindingsView = ({ profile, payApp }: Props) => {
 
   return (
     <div className="flex flex-col gap-4">
+      <DisclaimerBlock />
       <LicenseBar />
       <SummaryHeader result={result} />
 

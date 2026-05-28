@@ -217,4 +217,18 @@ describe('FindingsView', () => {
     renderLocked(<FindingsView profile={cleanProfile()} payApp={defaultPayApp()} />);
     expect(screen.getByLabelText('License key')).toBeInTheDocument();
   });
+
+  it('renders the advisory disclaimer block on the empty pay app state', () => {
+    renderUnlocked(<FindingsView profile={cleanProfile()} payApp={defaultPayApp()} />);
+    expect(
+      screen.getByRole('note', { name: /advisory disclaimer/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('renders the advisory disclaimer block when findings are present', () => {
+    renderUnlocked(<FindingsView profile={cleanProfile()} payApp={tiedPayApp()} />);
+    expect(
+      screen.getByRole('note', { name: /advisory disclaimer/i }),
+    ).toBeInTheDocument();
+  });
 });

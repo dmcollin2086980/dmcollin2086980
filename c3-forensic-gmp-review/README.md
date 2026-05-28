@@ -14,6 +14,7 @@ This directory holds the v1 build. See [`docs/v1-spec.md`](docs/v1-spec.md) for 
 **M3b — Markdown exposure memo: complete.** Deterministic `buildMarkdownMemo()` turns the audit into a full memo (header, summary, findings table, per-finding narrative for high+medium, required disclaimer). The Findings tab adds an Exposure memo section with Prepared by, Copy, and Download .md buttons.
 **M4 — Freemium paywall: complete.** Free tier hides every USD value (`$•••`) on the Findings tab and inside the memo preview, and disables Copy / Download. Entering a valid license key (format `C3-XXXX-XXXX`, e.g. demo key `C3-DEMO-V100`) persists to `localStorage` and unlocks both. Findings counts, severities, rule ids, titles, contract basis, explanations, and recommended actions stay visible in either mode.
 **PDF export: complete.** `buildPdfMemo` produces a real PDF (jspdf + jspdf-autotable) with the same structure as the Markdown memo: title, header fields, summary, findings table, per-finding narrative, disclaimer, page numbers. Wired into MemoPreview as a "Download .pdf" button, gated by the paywall.
+**M5 messaging: complete.** Two persistent callouts: a top-level emerald PrivacyBanner stating "Your project data stays in this browser. No backend, no analytics, no accounts", and an amber DisclaimerBlock at the top of the Findings tab making the advisory framing visible without needing to download the memo.
 
 The deterministic rules engine implements the 8 forensic checks from spec Section 5, with the addendum's fee-logic division applied:
 
@@ -28,7 +29,7 @@ The deterministic rules engine implements the 8 forensic checks from spec Sectio
 | `STORED_MATERIALS_DOC`        | low      | documentation checklist (informational)     |
 | `ARITHMETIC_INTEGRITY`        | high     | G702 rollup integrity vs G703 line totals   |
 
-Pending: M5 polish (privacy messaging, JSON save/load refinements).
+v1 build now covers all eight milestones from the spec. Remaining backlog: dev-time chunk-split for jspdf to silence the Vite bundle warning, plus the v1.1 items called out in the spec (Stripe billing, full-state JSON save/load, multi-project portfolio).
 
 ## Develop
 

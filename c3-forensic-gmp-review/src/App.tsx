@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FindingsView } from './components/FindingsView';
 import { PayAppEntry } from './components/PayAppEntry';
+import { PrivacyBanner } from './components/PrivacyBanner';
 import { ProjectProfileForm } from './components/ProjectProfileForm';
 import { LicenseProvider } from './state/LicenseContext';
 import { defaultPayApp } from './state/payApp';
@@ -58,7 +59,7 @@ const AppShell = ({
             C3 Forensic GMP Review
           </h1>
           <p className="text-sm text-slate-600">
-            Owner-side audit of GMP pay applications. All data stays in your browser.
+            Owner-side audit of GMP pay applications.
           </p>
           <nav className="mt-4 flex gap-1 border-b border-slate-200" role="tablist">
             {TABS.map((tab) => {
@@ -83,6 +84,7 @@ const AppShell = ({
           </nav>
         </div>
       </header>
+      <PrivacyBanner />
       <main className="mx-auto max-w-6xl px-4 py-6">
         {section === 'profile' && (
           <ProjectProfileForm profile={profile} onChange={setProfile} />
