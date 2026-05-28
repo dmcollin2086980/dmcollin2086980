@@ -13,6 +13,7 @@ This directory holds the v1 build. See [`docs/v1-spec.md`](docs/v1-spec.md) for 
 **M3a — Findings view: complete.** Third tab runs `runAudit` against the live profile + payApp and renders the severity-ranked findings as cards with formatted USD exposure, contract basis, affected lines, explanation, and recommended action.
 **M3b — Markdown exposure memo: complete.** Deterministic `buildMarkdownMemo()` turns the audit into a full memo (header, summary, findings table, per-finding narrative for high+medium, required disclaimer). The Findings tab adds an Exposure memo section with Prepared by, Copy, and Download .md buttons.
 **M4 — Freemium paywall: complete.** Free tier hides every USD value (`$•••`) on the Findings tab and inside the memo preview, and disables Copy / Download. Entering a valid license key (format `C3-XXXX-XXXX`, e.g. demo key `C3-DEMO-V100`) persists to `localStorage` and unlocks both. Findings counts, severities, rule ids, titles, contract basis, explanations, and recommended actions stay visible in either mode.
+**PDF export: complete.** `buildPdfMemo` produces a real PDF (jspdf + jspdf-autotable) with the same structure as the Markdown memo: title, header fields, summary, findings table, per-finding narrative, disclaimer, page numbers. Wired into MemoPreview as a "Download .pdf" button, gated by the paywall.
 
 The deterministic rules engine implements the 8 forensic checks from spec Section 5, with the addendum's fee-logic division applied:
 
@@ -27,7 +28,7 @@ The deterministic rules engine implements the 8 forensic checks from spec Sectio
 | `STORED_MATERIALS_DOC`        | low      | documentation checklist (informational)     |
 | `ARITHMETIC_INTEGRITY`        | high     | G702 rollup integrity vs G703 line totals   |
 
-Pending: PDF export, M5 polish (privacy messaging, JSON save/load refinements).
+Pending: M5 polish (privacy messaging, JSON save/load refinements).
 
 ## Develop
 
@@ -76,7 +77,8 @@ src/
     __tests__/              ProjectProfileForm, PayAppEntry, CsvImport, FindingsView, MemoPreview, LicenseBar
   memo/
     buildMarkdownMemo.ts    pure: AuditResult -> Markdown memo with required disclaimer
-    __tests__/buildMarkdownMemo.test.ts
+    buildPdfMemo.ts         pure: AuditResult -> PDF Blob (jspdf + autotable)
+    __tests__/buildMarkdownMemo.test.ts, buildPdfMemo.test.ts
   App.tsx                   app shell with Profile / Pay app / Findings tabs
   main.tsx                  React mount
   styles.css                @import "tailwindcss";

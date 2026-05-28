@@ -133,6 +133,22 @@ describe('MemoPreview', () => {
     renderLocked(<MemoPreview profile={profile} payApp={payApp} result={result} />);
     expect(screen.getByRole('button', { name: /copy memo/i })).toBeDisabled();
     expect(screen.getByRole('button', { name: /download \.md/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /download \.pdf/i })).toBeDisabled();
+  });
+
+  it('creates a PDF Blob when Download .pdf is clicked', async () => {
+    const createObjectURL = vi.fn().mockReturnValue('blob:fake-pdf');
+    const revokeObjectURL = vi.fn();
+    vi.stubGlobal('URL', { ...URL, createObjectURL, revokeObjectURL });
+    const user = userEvent.setup();
+    const { profile, payApp, result } = buildScenario();
+    renderUnlocked(<MemoPreview profile={profile} payApp={payApp} result={result} />);
+
+    await user.click(screen.getByRole('button', { name: /download \.pdf/i }));
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    const [blob] = createObjectURL.mock.calls[0]!;
+    expect(blob).toBeInstanceOf(Blob);
+    expect((blob as Blob).type).toBe('application/pdf');
   });
 
   it('masks dollar values in the preview when locked', () => {

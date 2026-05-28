@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { AuditResult, PayApplication, ProjectProfile } from '../engine/types';
 import { buildMarkdownMemo } from '../memo/buildMarkdownMemo';
+import { buildPdfMemo } from '../memo/buildPdfMemo';
 import { useLicense } from '../state/LicenseContext';
 import { maskDollars } from '../state/license';
 import { slugify } from '../state/profile';
@@ -34,17 +35,25 @@ export const MemoPreview = ({ profile, payApp, result }: Props) => {
     }
   };
 
-  const handleDownload = () => {
-    if (!isUnlocked) return;
-    const blob = new Blob([memo], { type: 'text/markdown' });
+  const downloadBlob = (blob: Blob, extension: 'md' | 'pdf') => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${slugify(profile.projectName)}-payapp-${payApp.applicationNumber}-memo.md`;
+    a.download = `${slugify(profile.projectName)}-payapp-${payApp.applicationNumber}-memo.${extension}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handleDownload = () => {
+    if (!isUnlocked) return;
+    downloadBlob(new Blob([memo], { type: 'text/markdown' }), 'md');
+  };
+
+  const handleDownloadPdf = () => {
+    if (!isUnlocked) return;
+    downloadBlob(buildPdfMemo({ profile, payApp, result, preparedBy }), 'pdf');
   };
 
   const lockedTitle = isUnlocked ? undefined : 'Activate a license to unlock memo export.';
@@ -74,6 +83,15 @@ export const MemoPreview = ({ profile, payApp, result }: Props) => {
             className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
             Download .md
+          </button>
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            disabled={!isUnlocked}
+            title={lockedTitle}
+            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+          >
+            Download .pdf
           </button>
         </div>
       </header>

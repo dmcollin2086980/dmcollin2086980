@@ -28,7 +28,9 @@ const SEVERITY_LABEL: Record<Severity, string> = {
   low: 'LOW',
 };
 
-const DISCLAIMER = [
+export { SEVERITY_LABEL };
+
+export const DISCLAIMER = [
   'This analysis is an advisory review of flags identified by deterministic rules',
   'applied to the Project Profile and pay application data provided. It is not a',
   'legal determination. Contract interpretation should be confirmed with counsel',
@@ -39,7 +41,7 @@ const DISCLAIMER = [
 const escapeCell = (s: string): string =>
   s.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\r?\n/g, '<br>');
 
-const stripEmDash = (s: string): string => s.replace(/—/g, '-');
+export const stripEmDash = (s: string): string => s.replace(/—/g, '-');
 
 const buildHeader = (
   profile: ProjectProfile,
