@@ -7,6 +7,7 @@ This directory holds the v1 build. See [`docs/v1-spec.md`](docs/v1-spec.md) for 
 ## Status
 
 **M1 — Engine core: complete.**
+**M2a — CSV / paste import: complete.** Pure-TS parser for the addendum's CSV contract; structured errors and warnings; output feeds directly into `runAudit`.
 
 The deterministic rules engine implements the 8 forensic checks from spec Section 5, with the addendum's fee-logic division applied:
 
@@ -21,7 +22,7 @@ The deterministic rules engine implements the 8 forensic checks from spec Sectio
 | `STORED_MATERIALS_DOC`        | low      | documentation checklist (informational)     |
 | `ARITHMETIC_INTEGRITY`        | high     | G702 rollup integrity vs G703 line totals   |
 
-Pending: M2 input UI, M3 findings table + memo export, M4 paywall, M5 polish.
+Pending: M2b/M2c input UI, M3 findings table + memo export, M4 paywall, M5 polish.
 
 ## Develop
 
@@ -35,18 +36,25 @@ npm test
 ## Layout
 
 ```
-src/engine/
-  types.ts                  shared TypeScript types
-  helpers.ts                small numeric / lookup utilities
-  rules/                    one pure function per rule
-  runner.ts                 aggregates findings, sorts, totals exposure
-  index.ts                  public engine entrypoint
-  __tests__/
-    fixtures.ts             clean Profile + clean PayApp (matches addendum's sample CSV)
-    *.test.ts               one suite per rule plus a runner suite
+src/
+  index.ts                  project-level barrel (engine + import)
+  engine/
+    types.ts                shared TypeScript types
+    helpers.ts              small numeric / lookup utilities
+    rules/                  one pure function per rule
+    runner.ts               aggregates findings, sorts, totals exposure
+    index.ts                engine-only barrel
+    __tests__/
+      fixtures.ts           clean Profile + clean PayApp (matches addendum's sample CSV)
+      *.test.ts             one suite per rule plus a runner suite
+  import/
+    csv.ts                  parsePayAppCsv: text -> PayAppLineItem[] + ImportIssue[]
+    __tests__/
+      fixtures.ts           addendum sample CSV (and its TSV form)
+      csv.test.ts
 ```
 
-The engine is framework-agnostic: pure TypeScript, no DOM, no network. The UI layers (M2 onwards) will consume it through `runAudit(profile, payApp)`.
+The engine is framework-agnostic: pure TypeScript, no DOM, no network. The UI layers (M2b onwards) will consume it through `parsePayAppCsv(text)` and `runAudit(profile, payApp)`.
 
 ## Liability guardrails
 
