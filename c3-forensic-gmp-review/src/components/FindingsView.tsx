@@ -7,6 +7,7 @@ import type {
   Severity,
 } from '../engine/types';
 import { runAudit } from '../engine/runner';
+import { MemoPreview } from './MemoPreview';
 
 interface Props {
   profile: ProjectProfile;
@@ -143,6 +144,8 @@ export const FindingsView = ({ profile, payApp }: Props) => {
           <FindingCard key={`${f.ruleId}-${i}`} finding={f} />
         ))}
       </div>
+
+      <MemoPreview profile={profile} payApp={payApp} result={result} />
     </div>
   );
 };

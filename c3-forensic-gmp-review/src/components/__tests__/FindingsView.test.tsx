@@ -48,7 +48,7 @@ describe('FindingsView', () => {
 
   it('renders the clean-state callout when the sample CSV ties cleanly', () => {
     render(<FindingsView profile={cleanProfile()} payApp={tiedPayApp()} />);
-    expect(screen.getByText(/no findings/i)).toBeInTheDocument();
+    expect(screen.getByText(/cleared every rule/i)).toBeInTheDocument();
     expect(screen.queryByRole('article')).not.toBeInTheDocument();
   });
 
@@ -98,22 +98,27 @@ describe('FindingsView', () => {
 
     render(<FindingsView profile={profile} payApp={payApp} />);
 
-    // Rule titles
-    expect(screen.getByText(/retainage over-withheld/i)).toBeInTheDocument();
-    expect(screen.getByText(/fee applied to insurance passthrough/i)).toBeInTheDocument();
-    expect(screen.getByText(/allowance ALLOW-01 exceeded/i)).toBeInTheDocument();
+    // Rule titles: each appears in both the card h3 and the memo table cell.
+    expect(screen.getAllByText(/retainage over-withheld/i).length).toBeGreaterThan(0);
     expect(
-      screen.getByText(/cumulative general conditions billings exceed/i),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/owner's contingency drawn this period/i)).toBeInTheDocument();
+      screen.getAllByText(/fee applied to insurance passthrough/i).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(/allowance ALLOW-01 exceeded/i).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(/cumulative general conditions billings exceed/i).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(/owner's contingency drawn this period/i).length,
+    ).toBeGreaterThan(0);
 
-    // Severity counts: 2 high (retainage + insurance), 3 medium (allowance, gc cap, contingency)
-    expect(screen.getByText(/2 high/)).toBeInTheDocument();
-    expect(screen.getByText(/3 medium/)).toBeInTheDocument();
+    // Severity counts: 2 high (retainage + insurance), 3 medium (allowance, gc cap, contingency).
+    // Appear in both the summary badges and the memo summary paragraph.
+    expect(screen.getAllByText(/2 high/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/3 medium/).length).toBeGreaterThan(0);
 
-    // USD formatting
-    expect(screen.getByText(/\$26,150/)).toBeInTheDocument(); // retainage delta
-    expect(screen.getByText(/\$20,000/)).toBeInTheDocument(); // gc cap overage
+    // USD formatting: present in both the cards and the memo, but at least one is enough.
+    expect(screen.getAllByText(/\$26,150/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/\$20,000/).length).toBeGreaterThan(0);
   });
 
   it('recomputes when the profile changes (fee-on-fee disappears)', async () => {
@@ -152,13 +157,13 @@ describe('FindingsView', () => {
     render(<Harness />);
 
     expect(
-      screen.getByText(/contractor fee applied to general conditions/i),
-    ).toBeInTheDocument();
+      screen.getAllByText(/contractor fee applied to general conditions/i).length,
+    ).toBeGreaterThan(0);
 
     await user.click(screen.getByRole('button', { name: /allow gc/i }));
 
     expect(
-      screen.queryByText(/contractor fee applied to general conditions/i),
-    ).not.toBeInTheDocument();
+      screen.queryAllByText(/contractor fee applied to general conditions/i),
+    ).toHaveLength(0);
   });
 });

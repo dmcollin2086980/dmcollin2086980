@@ -1,0 +1,93 @@
+import { useMemo, useState } from 'react';
+import type { AuditResult, PayApplication, ProjectProfile } from '../engine/types';
+import { buildMarkdownMemo } from '../memo/buildMarkdownMemo';
+import { slugify } from '../state/profile';
+import { Field, TextInput } from './Field';
+
+interface Props {
+  profile: ProjectProfile;
+  payApp: PayApplication;
+  result: AuditResult;
+}
+
+export const MemoPreview = ({ profile, payApp, result }: Props) => {
+  const [preparedBy, setPreparedBy] = useState('');
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle');
+
+  const memo = useMemo(
+    () => buildMarkdownMemo({ profile, payApp, result, preparedBy }),
+    [profile, payApp, result, preparedBy],
+  );
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(memo);
+      setCopyState('copied');
+      window.setTimeout(() => setCopyState('idle'), 2000);
+    } catch {
+      setCopyState('error');
+    }
+  };
+
+  const handleDownload = () => {
+    const blob = new Blob([memo], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${slugify(profile.projectName)}-payapp-${payApp.applicationNumber}-memo.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <section
+      aria-label="Exposure memo"
+      className="rounded-md border border-slate-200 bg-white p-4 shadow-sm"
+    >
+      <header className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-base font-semibold text-slate-900">Exposure memo</h2>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50"
+          >
+            {copyState === 'copied' ? 'Copied' : 'Copy memo'}
+          </button>
+          <button
+            type="button"
+            onClick={handleDownload}
+            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+          >
+            Download .md
+          </button>
+        </div>
+      </header>
+
+      <div className="mb-3">
+        <Field label="Prepared by" hint="Shown in the memo header.">
+          <TextInput
+            value={preparedBy}
+            onChange={setPreparedBy}
+            placeholder="Owner's representative name"
+          />
+        </Field>
+      </div>
+
+      {copyState === 'error' && (
+        <p role="alert" className="mb-2 text-sm text-red-600">
+          Could not copy to clipboard. Use Download instead.
+        </p>
+      )}
+
+      <pre
+        aria-label="Memo preview"
+        className="max-h-[28rem] overflow-auto whitespace-pre rounded border border-slate-200 bg-slate-50 p-3 font-mono text-xs text-slate-800"
+      >
+        {memo}
+      </pre>
+    </section>
+  );
+};
