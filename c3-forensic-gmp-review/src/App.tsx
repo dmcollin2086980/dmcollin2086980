@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { FindingsView } from './components/FindingsView';
 import { PayAppEntry } from './components/PayAppEntry';
+import { PdfImport } from './components/PdfImport';
 import { PrivacyBanner } from './components/PrivacyBanner';
 import { ProjectProfileForm } from './components/ProjectProfileForm';
+import { Section } from './components/Field';
 import { LicenseProvider } from './state/LicenseContext';
 import { defaultPayApp } from './state/payApp';
 import { defaultProfile } from './state/profile';
@@ -60,7 +62,19 @@ export const App = () => {
             <ProjectProfileForm profile={profile} onChange={setProfile} />
           )}
           {section === 'payapp' && (
-            <PayAppEntry payApp={payApp} onChange={setPayApp} />
+            <div className="flex flex-col gap-4">
+              <Section title="PDF import">
+                <div className="md:col-span-2">
+                  <PdfImport
+                    profile={profile}
+                    payApp={payApp}
+                    onProfile={setProfile}
+                    onPayApp={setPayApp}
+                  />
+                </div>
+              </Section>
+              <PayAppEntry payApp={payApp} onChange={setPayApp} />
+            </div>
           )}
           {section === 'findings' && (
             <FindingsView profile={profile} payApp={payApp} />

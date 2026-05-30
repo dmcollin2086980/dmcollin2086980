@@ -1,5 +1,15 @@
 import Papa from 'papaparse';
 import { ALL_LINE_CATEGORIES, type LineCategory, type PayAppLineItem } from '../engine/types';
+import {
+  isRowEmpty,
+  normalizeNumber,
+  type ImportIssue,
+  type ImportResult,
+} from './shared';
+
+// Re-exported so existing importers (CsvImport.tsx, csv.test.ts) that reference
+// these from '../import/csv' keep working after the shared refactor.
+export type { ImportIssue, ImportIssueCode, ImportResult } from './shared';
 
 const EXPECTED_HEADERS = [
   'code',
@@ -15,55 +25,11 @@ const EXPECTED_HEADERS = [
 
 const VALID_CATEGORIES = ALL_LINE_CATEGORIES;
 
-export type ImportIssueCode =
-  | 'EMPTY_INPUT'
-  | 'HEADER_MISMATCH'
-  | 'MISSING_REQUIRED'
-  | 'NON_NUMERIC'
-  | 'UNKNOWN_CATEGORY'
-  | 'DUPLICATE_CODE'
-  | 'FEE_WITHOUT_BASIS'
-  | 'UNKNOWN_FEE_BASIS'
-  | 'NON_FEE_HAS_BASIS'
-  | 'OVERBILLING'
-  | 'PARSE_FAILURE';
-
-export interface ImportIssue {
-  severity: 'error' | 'warning';
-  code: ImportIssueCode;
-  row?: number;
-  column?: string;
-  message: string;
-}
-
-export interface ImportResult {
-  success: boolean;
-  lineItems: PayAppLineItem[];
-  issues: ImportIssue[];
-}
-
 const failure = (issues: ImportIssue[]): ImportResult => ({
   success: false,
   lineItems: [],
   issues,
 });
-
-const isRowEmpty = (row: string[]): boolean =>
-  row.every((cell) => (cell ?? '').trim() === '');
-
-const normalizeNumber = (raw: string): number | null => {
-  let s = raw.trim();
-  if (s === '') return null;
-  s = s.replace(/\$/g, '').replace(/,/g, '').replace(/\s+/g, '');
-  let negative = false;
-  if (s.startsWith('(') && s.endsWith(')')) {
-    negative = true;
-    s = s.slice(1, -1);
-  }
-  if (s === '' || !/^-?\d+(\.\d+)?$/.test(s)) return NaN;
-  const n = Number(s);
-  return negative ? -n : n;
-};
 
 const validateHeader = (row: string[]): boolean => {
   if (row.length !== EXPECTED_HEADERS.length) return false;
