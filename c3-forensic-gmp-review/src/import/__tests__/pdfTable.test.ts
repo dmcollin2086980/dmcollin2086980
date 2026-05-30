@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   clusterRows,
   extractG702,
+  findCoverPage,
   findHeaderRow,
   mapBodyRows,
   reconstructTable,
@@ -15,7 +16,7 @@ describe('clusterRows', () => {
     expect(rows[0]!.page).toBe(1);
     // Within a page, the first row is the highest (largest Y).
     const page1 = rows.filter((r) => r.page === 1);
-    expect(page1[0]!.y).toBe(750);
+    expect(page1[0]!.y).toBe(540);
     // Each clustered row keeps its tokens sorted left-to-right.
     const xs = page1[0]!.tokens.map((t) => t.x);
     expect(xs).toEqual([...xs].sort((a, b) => a - b));
@@ -64,7 +65,8 @@ describe('mapBodyRows', () => {
 
 describe('extractG702', () => {
   it('reads summary labels and assigns generic labels after specific ones', () => {
-    const g702 = extractG702(clusterRows(SAMPLE_PDF_TOKENS));
+    const rows = clusterRows(SAMPLE_PDF_TOKENS);
+    const g702 = extractG702(rows, findCoverPage(rows));
     expect(g702.originalContractSum).toBe('3,490,000');
     expect(g702.totalCompletedAndStored).toBe('1,565,000');
     // "retainage" must not steal the "total earned less retainage" row.

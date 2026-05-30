@@ -11,7 +11,7 @@ import type {
   ProjectProfile,
 } from '../engine/types';
 import type { PdfToken } from './pdfExtract';
-import { reconstructTable } from './pdfTable';
+import { detectCovers, reconstructTable } from './pdfTable';
 import { normalizeNumber, type ImportIssue } from './shared';
 
 export interface PdfImportResult {
@@ -22,6 +22,46 @@ export interface PdfImportResult {
   lineItems: PayAppLineItem[];
   issues: ImportIssue[];
 }
+
+/** One G702/G703 pay app located inside a (possibly multi-app) PDF. */
+export interface DetectedPayApp {
+  index: number;
+  /** 1-based page where this app's G702 cover sits. */
+  coverPage: number;
+  firstPage: number;
+  lastPage: number;
+  contractor?: string;
+  applicationNumber?: number;
+  originalContractSum?: number;
+}
+
+/** Page span to restrict parsing to a single app inside a bundle. */
+export interface PageRange {
+  firstPage: number;
+  lastPage: number;
+}
+
+const numOpt = (s: string | undefined): number | undefined => {
+  if (s === undefined) return undefined;
+  const n = normalizeNumber(s);
+  return n === null || Number.isNaN(n) ? undefined : n;
+};
+
+// Split a bundle into its constituent pay apps. Each detected cover delimits an
+// app; the app runs until the page before the next cover (or the document end).
+export const detectPayApps = (tokens: PdfToken[]): DetectedPayApp[] => {
+  const covers = detectCovers(tokens);
+  const maxPage = tokens.reduce((m, t) => Math.max(m, t.page), 0);
+  return covers.map((c, i) => ({
+    index: i,
+    coverPage: c.coverPage,
+    firstPage: c.coverPage,
+    lastPage: i + 1 < covers.length ? covers[i + 1]!.coverPage - 1 : maxPage,
+    contractor: c.contractor,
+    applicationNumber: numOpt(c.applicationNumber),
+    originalContractSum: numOpt(c.originalContractSum),
+  }));
+};
 
 const CATEGORY_KEYWORDS: { category: LineCategory; keywords: string[] }[] = [
   { category: 'fee', keywords: ['fee'] },
@@ -53,10 +93,16 @@ const num = (s: string | undefined): number | undefined => {
 const isTotalRow = (description: string): boolean =>
   /\b(grand\s+total|sub\s*total|total)\b/i.test(description);
 
-export const parsePayAppPdf = (tokens: PdfToken[]): PdfImportResult => {
+export const parsePayAppPdf = (
+  tokens: PdfToken[],
+  range?: PageRange,
+): PdfImportResult => {
   const issues: ImportIssue[] = [];
+  const scoped = range
+    ? tokens.filter((t) => t.page >= range.firstPage && t.page <= range.lastPage)
+    : tokens;
 
-  if (tokens.length === 0) {
+  if (scoped.length === 0) {
     issues.push({
       severity: 'error',
       code: 'PDF_NO_TEXT_LAYER',
@@ -66,7 +112,7 @@ export const parsePayAppPdf = (tokens: PdfToken[]): PdfImportResult => {
     return { success: false, profile: {}, payApp: {}, lineItems: [], issues };
   }
 
-  const { headerFound, g703, g702 } = reconstructTable(tokens);
+  const { headerFound, g703, g702 } = reconstructTable(scoped);
   if (!headerFound) {
     issues.push({
       severity: 'error',
