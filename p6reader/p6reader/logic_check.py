@@ -59,14 +59,34 @@ def _succ_map(schedule: Schedule) -> dict[str, list]:
     return m
 
 
-def _find_project_milestones(schedule: Schedule) -> tuple[set[str], set[str]]:
-    start_mss = {a.task_id for a in schedule.activities.values() if a.task_type == "TT_Mile"}
-    fin_mss = {a.task_id for a in schedule.activities.values() if a.task_type == "TT_FinMile"}
+def _find_project_milestones(
+    schedule: Schedule, preds: dict[str, list], succs: dict[str, list]
+) -> tuple[set[str], set[str]]:
+    """A *project* start milestone is a start milestone with no predecessor of
+    its own (a true network source) -- not every interim TT_Mile milestone.
+    A schedule can legitimately have many phase-kickoff milestones (RFQ Due,
+    Program Complete, ...) that are themselves driven by real logic; treating
+    every TT_Mile/TT_FinMile activity as "the" project boundary caused
+    check_open_starts/finishes to flag ordinary, well-connected activities
+    whose only immediate predecessor/successor happened to be one of those
+    interim milestones. Symmetrically, a project finish milestone is a finish
+    milestone with no successor of its own (a true network sink).
+    """
+    start_mss = {
+        a.task_id
+        for a in schedule.activities.values()
+        if a.task_type == "TT_Mile" and not preds.get(a.task_id)
+    }
+    fin_mss = {
+        a.task_id
+        for a in schedule.activities.values()
+        if a.task_type == "TT_FinMile" and not succs.get(a.task_id)
+    }
     return start_mss, fin_mss
 
 
-def check_open_starts(schedule: Schedule, preds: dict[str, list]) -> list[Finding]:
-    start_mss, _ = _find_project_milestones(schedule)
+def check_open_starts(schedule: Schedule, preds: dict[str, list], succs: dict[str, list]) -> list[Finding]:
+    start_mss, _ = _find_project_milestones(schedule, preds, succs)
     findings = []
     for act in schedule.activities.values():
         if act.task_id in start_mss or act.is_wbs_summary:
@@ -85,8 +105,8 @@ def check_open_starts(schedule: Schedule, preds: dict[str, list]) -> list[Findin
     return findings
 
 
-def check_open_finishes(schedule: Schedule, succs: dict[str, list]) -> list[Finding]:
-    _, fin_mss = _find_project_milestones(schedule)
+def check_open_finishes(schedule: Schedule, preds: dict[str, list], succs: dict[str, list]) -> list[Finding]:
+    _, fin_mss = _find_project_milestones(schedule, preds, succs)
     findings = []
     for act in schedule.activities.values():
         if act.task_id in fin_mss or act.is_wbs_summary:
@@ -467,8 +487,8 @@ def run_all_checks(schedule: Schedule, options: CheckOptions | None = None) -> l
     succs = _succ_map(schedule)
 
     findings: list[Finding] = []
-    findings += check_open_starts(schedule, preds)
-    findings += check_open_finishes(schedule, succs)
+    findings += check_open_starts(schedule, preds, succs)
+    findings += check_open_finishes(schedule, preds, succs)
     findings += check_negative_float(schedule)
     findings += check_circular_logic(schedule)
     findings += check_data_date_issues(schedule)
