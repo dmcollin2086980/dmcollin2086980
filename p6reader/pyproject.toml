@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "p6reader"
+version = "0.3.0"
+description = "Read Primavera P6 .xer and P6 XML exports, QC schedule logic, and compare snapshots -- without owning P6."
+requires-python = ">=3.11"
+readme = "README.md"
+dependencies = [
+    "pandas",
+    "click",
+    "networkx",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+p6reader = "p6reader.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["p6reader*"]

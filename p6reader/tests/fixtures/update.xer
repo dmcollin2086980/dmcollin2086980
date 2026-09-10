@@ -1,0 +1,74 @@
+ERMHDR	8.4	2026-02-16	Project	admin	dcollinsworth	P6Reader	1	USD
+%T	CURRTYPE
+%F	curr_id	decimal_digit_cnt	curr_symbol	curr_type
+%R	1	2	$	US Dollar
+%E
+%T	CALENDAR
+%F	clndr_id	clndr_name	clndr_type	day_hr_cnt	week_hr_cnt	clndr_data
+%R	1001	5 Day Workweek	CA_Base	8	40	(0||CalendarData()(  (0||DaysOfWeek()(    (0||1(s|08:00|f|17:00)())    (0||2(s|08:00|f|17:00)())    (0||3(s|08:00|f|17:00)())    (0||4(s|08:00|f|17:00)())    (0||5(s|08:00|f|17:00)())    (0||6()())    (0||7()())  ))  (0||Exceptions()(    (0||0(d|46023)())  ))))
+%R	1002	No Holidays Custom	CA_Base	NOTPARSEABLEGARBAGE!!!	40	(0||GarbledUnparseableString-not-valid-clndr-grammar-at-all)
+%E
+%T	PROJECT
+%F	proj_id	proj_short_name	plan_start_date	plan_end_date	last_recalc_date	scd_end_date
+%R	100	HCTI-01	2026-01-05 08:00	2026-07-10 17:00	2026-02-16 08:00	2026-07-10 17:00
+%E
+%T	PROJWBS
+%F	wbs_id	parent_wbs_id	proj_id	wbs_short_name	wbs_name	proj_node_flag
+%R	1	 	100	HCTI-01	Healthcare TI Project	Y
+%R	2	1	100	SITE	Site Work & Mobilization	N
+%R	3	1	100	STRUCT	Structural & Envelope	N
+%R	4	1	100	MEP	MEP Rough-In	N
+%R	5	1	100	FINISH	Finishes & Closeout	N
+%E
+%T	TASK
+%F	task_id	proj_id	wbs_id	task_code	task_name	task_type	status_code	target_drtn_hr_cnt	remain_drtn_hr_cnt	target_start_date	target_end_date	act_start_date	act_end_date	early_start_date	early_end_date	late_start_date	late_end_date	total_float_hr_cnt	free_float_hr_cnt	cstr_type	cstr_date	cstr_type2	cstr_date2	clndr_id	driving_path_flag	phys_complete_pct
+%R	1	100	1	MS-START	Project Start	TT_Mile	TK_Complete	0	0	2026-01-05 08:00	2026-01-05 08:00	2026-01-05 08:00	2026-01-05 08:00	2026-01-05 08:00	2026-01-05 08:00	2026-01-05 08:00	2026-01-05 08:00	0	0				1001	Y	100
+%R	10	100	2	A1000	Mobilize Site	TT_Task	TK_Complete	40	0	2026-01-05 08:00	2026-01-09 17:00	2026-01-05 08:00	2026-01-09 17:00	2026-01-05 08:00	2026-01-09 17:00	2026-01-05 08:00	2026-01-09 17:00	0	0				1001	Y	100
+%R	20	100	2	A1010	Site Demolition	TT_Task	TK_Complete	80	0	2026-01-12 08:00	2026-01-21 17:00	2026-01-12 08:00	2026-01-21 17:00	2026-01-12 08:00	2026-01-21 17:00	2026-01-12 08:00	2026-01-21 17:00	0	0				1002	Y	100
+%R	30	100	3	A1020	Foundations	TT_Task	TK_Complete	120	0	2026-01-22 08:00	2026-02-06 17:00	2026-01-22 08:00	2026-02-10 17:00	2026-01-22 08:00	2026-02-10 17:00	2026-01-22 08:00	2026-02-10 17:00	0	0				1001	Y	100
+%R	1025	100	3	A1025	Utility Rough-In	TT_Task	TK_NotStart	40	40			2026-02-11 08:00	2026-02-16 17:00	2026-02-11 08:00	2026-02-16 17:00	0	0				1001	N	0
+%R	40	100	3	A1030	Structural Steel Erection	TT_Task	TK_Active	160	120	2026-02-09 08:00	2026-03-02 17:00	2026-02-11 08:00		2026-02-11 08:00	2026-03-09 17:00	2026-02-11 08:00	2026-03-09 17:00	0	0				1001	Y	25
+%R	50	100	3	A1040	Building Envelope	TT_Task	TK_Active	120	100	2026-03-03 08:00	2026-03-18 17:00	2026-02-12 08:00		2026-03-10 08:00	2026-03-27 17:00	2026-03-10 08:00	2026-03-27 17:00	0	0				1001	N	17
+%R	60	100	4	A1050	MEP Rough-In	TT_Task	TK_NotStart	400	400			2026-03-30 08:00	2026-06-08 17:00	2026-03-30 08:00	2026-06-08 17:00	0	0				1001	Y	0
+%R	70	100	4	A1060	Above Ceiling Inspection ICRA	TT_Task	TK_NotStart	8	8			2026-06-09 08:00	2026-06-09 17:00	2026-06-09 08:00	2026-06-09 17:00	0	0				1001	N	0
+%R	80	100	5	A1070	Interior Finishes	TT_Task	TK_NotStart	160	160			2026-06-10 08:00	2026-07-01 17:00	2026-06-10 08:00	2026-07-01 17:00	0	0				1001	Y	0
+%R	85	100	5	A1071	Interior Finishes	TT_Task	TK_NotStart	40	40			2026-06-10 08:00	2026-06-15 17:00	2026-06-10 08:00	2026-06-15 17:00	0	0				1001	N	0
+%R	90	100	5	A1080	Punchlist and Closeout	TT_LOE	TK_NotStart	160	160			2026-06-10 08:00	2026-07-01 17:00	2026-06-10 08:00	2026-07-01 17:00	0	0				1001	N	0
+%R	95	100	5	A1090	Owner Move-In	TT_Task	TK_NotStart	8	8			2026-07-02 08:00	2026-07-02 17:00	2026-07-02 08:00	2026-07-02 17:00	400	400	CS_MSO	2026-07-02 08:00		1001	N	0
+%R	99	100	1	MS-FIN	Project Finish	TT_FinMile	TK_NotStart	8	8			2026-07-03 17:00	2026-07-03 17:00	2026-07-03 17:00	2026-07-03 17:00	0	0				1001	Y	0
+%E
+%T	TASKPRED
+%F	task_pred_id	task_id	pred_task_id	proj_id	pred_type	lag_hr_cnt
+%R	1	10	1	100	PR_FS	0
+%R	2	20	10	100	PR_FS	0
+%R	4	30	20	100	PR_FS	0
+%R	16	1025	30	100	PR_FS	0
+%R	5	40	30	100	PR_FS	0
+%R	17	40	1025	100	PR_FS	0
+%R	6	50	40	100	PR_FS	24
+%R	7	60	40	100	PR_FS	-16
+%R	8	70	60	100	PR_FS	0
+%R	9	70	40	100	PR_SF	0
+%R	10	80	70	100	PR_FS	100
+%R	11	85	70	100	PR_FS	0
+%R	12	90	80	100	PR_SS	0
+%R	13	95	80	100	PR_FS	0
+%R	14	95	90	100	PR_FS	0
+%R	15	99	95	100	PR_FS	0
+%E
+%T	RSRC
+%F	rsrc_id	rsrc_name	rsrc_short_name
+%R	1	General Labor	LABOR
+%E
+%T	TASKRSRC
+%F	taskrsrc_id	task_id	proj_id	rsrc_id	target_qty
+%R	1	30	100	1	480
+%E
+%T	UDFTYPE
+%F	udf_type_id	table_name	udf_type_label
+%R	1	TASK	Area
+%E
+%T	UDFVALUE
+%F	udf_type_id	fk_id	proj_id	udf_text
+%R	1	30	100	Site
+%E
