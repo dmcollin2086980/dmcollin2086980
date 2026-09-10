@@ -9,6 +9,9 @@ import sys
 
 import click
 
+from . import compare as compare_mod
+from . import export as export_mod
+from . import logic_check
 from . import model as model_mod
 from . import store
 from . import xer as xer_mod
@@ -150,6 +153,86 @@ def summary(db_path: str) -> None:
         _print_warnings_summary(schedule.all_warnings)
     finally:
         conn.close()
+
+
+@main.command()
+@click.argument("db_path", type=click.Path(exists=True, dir_okay=False))
+@click.option("--format", "fmt", default="csv", type=click.Choice(["csv"]), help="Export format.")
+@click.option("--out", "out_dir", required=True, type=click.Path(), help="Output directory.")
+def export(db_path: str, fmt: str, out_dir: str) -> None:
+    """Export activities, relationships, WBS, and calendars to CSV."""
+    conn, schedule = _open_schedule(db_path)
+    try:
+        written = export_mod.export_csv(schedule, out_dir)
+        click.echo(f"Exported {len(written)} files to {out_dir}:")
+        for path in written:
+            click.echo(f"  {path}")
+        _print_warnings_summary(schedule.all_warnings)
+    finally:
+        conn.close()
+
+
+@main.command()
+@click.argument("db_path", type=click.Path(exists=True, dir_okay=False))
+@click.option("--out", "out_path", required=True, type=click.Path(), help="Markdown report output path.")
+@click.option("--max-duration-days", default=logic_check.DEFAULT_MAX_DURATION_DAYS, show_default=True,
+              help="Flag non-LOE/non-milestone activities longer than this many working days.")
+@click.option("--high-float-days", default=logic_check.DEFAULT_HIGH_FLOAT_DAYS, show_default=True,
+              help="Flag incomplete activities with more total float (working days) than this.")
+@click.option("--max-lag-days", default=logic_check.DEFAULT_MAX_LAG_DAYS, show_default=True,
+              help="Flag relationships with lag (working days) greater than this.")
+@click.option("--healthcare-overlay/--no-healthcare-overlay", default=False,
+              help="Flag if no activities match healthcare keywords (ICRA/ILSM/ADHS/TJC/etc). Off by default.")
+def check(db_path: str, out_path: str, max_duration_days: float, high_float_days: float,
+          max_lag_days: float, healthcare_overlay: bool) -> None:
+    """Run schedule logic QC and write a severity-ranked markdown report."""
+    conn, schedule = _open_schedule(db_path)
+    try:
+        options = logic_check.CheckOptions(
+            max_duration_days=max_duration_days,
+            high_float_days=high_float_days,
+            max_lag_days=max_lag_days,
+            healthcare_overlay=healthcare_overlay,
+        )
+        findings = logic_check.run_all_checks(schedule, options)
+        report = logic_check.render_markdown_report(findings, options, schedule)
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(report)
+
+        counts = collections.Counter(f.severity for f in findings)
+        click.echo(f"Wrote QC report to {out_path}")
+        for sev in logic_check.SEVERITIES:
+            click.echo(f"  {sev}: {counts.get(sev, 0)}")
+        _print_warnings_summary(schedule.all_warnings)
+    finally:
+        conn.close()
+
+
+@main.command()
+@click.argument("baseline_db", type=click.Path(exists=True, dir_okay=False))
+@click.argument("update_db", type=click.Path(exists=True, dir_okay=False))
+@click.option("--out", "out_path", required=True, type=click.Path(), help="Markdown report output path.")
+def compare(baseline_db: str, update_db: str, out_path: str) -> None:
+    """Compare two schedule databases (baseline vs. update) by task_code."""
+    conn_b, schedule_b = _open_schedule(baseline_db)
+    conn_u, schedule_u = _open_schedule(update_db)
+    try:
+        result = compare_mod.compare_schedules(schedule_b, schedule_u)
+        report = compare_mod.render_markdown_report(result, schedule_b, schedule_u)
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(report)
+
+        click.echo(f"Wrote comparison report to {out_path}")
+        click.echo(f"  Added: {len(result.added_activities)}")
+        click.echo(f"  Deleted: {len(result.deleted_activities)}")
+        click.echo(f"  Renamed: {len(result.renamed_activities)}")
+        click.echo(f"  Date slips: {len(result.date_slips)}")
+        click.echo(f"  Relationship changes: {len(result.relationship_changes)}")
+        click.echo(f"  Constraint changes: {len(result.constraint_changes)}")
+        _print_warnings_summary(schedule_b.all_warnings + schedule_u.all_warnings)
+    finally:
+        conn_b.close()
+        conn_u.close()
 
 
 if __name__ == "__main__":
